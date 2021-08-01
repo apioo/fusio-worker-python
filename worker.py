@@ -1,9 +1,10 @@
+import http.client
+import importlib
+import json
 import os.path
 import sys
-import json
-import importlib
-import http.client
-from MySQLdb import _mysql
+import traceback
+import pymysql.cursors
 
 sys.path.append("./actions")
 sys.path.append("./worker")
@@ -33,9 +34,10 @@ class WorkerHandler:
             'config': connection.config,
         }
 
-        handle = open(file, "a")
-        handle.write(json.dumps(data))
-        handle.close()
+        with open(file, 'w') as connection_file:
+            connection_file.seek(0)
+            connection_file.write(json.dumps(data))
+            connection_file.truncate()
 
         self.connections = None
 
@@ -44,18 +46,21 @@ class WorkerHandler:
         return Message(success=True, message='Update connection successful')
 
     def setAction(self, action):
-        dir = './action'
+        dir = './actions'
         if not os.path.isdir(dir):
             os.mkdir(dir)
 
         if not action.name:
             return Message(success=False, message='Provided no action name')
 
-        file = dir + '/' + action.name + '.js'
+        file = dir + '/' + action.name + '.py'
 
-        handle = open(file, "a")
-        handle.write(action.code)
-        handle.close()
+        with open(file, 'w') as action_file:
+            action_file.seek(0)
+            action_file.write(action.code)
+            action_file.truncate()
+
+        sys.modules.clear()
 
         print('Update action ' + action.name)
 
@@ -100,50 +105,50 @@ class WorkerHandler:
 
 
 class Connector:
-    def __init__(self, connections):
-        self.connections = connections
-        self.instances = {}
+    def __init__(self, configs):
+        self.configs = configs
+        self.connections = {}
 
     def getConnection(self, name):
-        if self.instances[name]:
-            return self.instances[name]
+        if name in self.connections.keys():
+            return self.connections[name]
 
-        if not self.connections[name]:
+        if name not in self.configs.keys():
             raise Exception("Provided connection is not configured")
 
-        connection = self.connections[name]
+        config = self.configs[name]
 
-        if connection.type == "Fusio.Adapter.Sql.Connection.Sql":
-            if connection.config.type == "pdo_mysql":
-                con = _mysql.connect(
-                    connection.config.host,
-                    connection.config.username,
-                    connection.config.password,
-                    connection.config.database
+        if config['type'] == "Fusio.Adapter.Sql.Connection.Sql":
+            if config['config']['type'] == "pdo_mysql":
+                con = pymysql.connect(
+                    host=config['config']['host'],
+                    user=config['config']['username'],
+                    password=config['config']['password'],
+                    database=config['config']['database']
                 )
 
-                self.instances[name] = con
+                self.connections[name] = con
 
                 return con
             else:
                 raise Exception("SQL type is not supported")
-        elif connection.type == "Fusio.Adapter.Sql.Connection.SqlAdvanced":
+        elif config['type'] == "Fusio.Adapter.Sql.Connection.SqlAdvanced":
             # TODO
 
             return None
-        elif connection.type == "Fusio.Adapter.Http.Connection.Http":
-            client = http.client.HTTPConnection(connection.config.url)
+        elif config['type'] == "Fusio.Adapter.Http.Connection.Http":
+            client = http.client.HTTPConnection(config['config']['url'])
 
             # @TODO configure proxy for http client
-            #connection.getConfig().get("username");
-            #connection.getConfig().get("password");
-            #connection.getConfig().get("proxy");
+            #config['config']['username']
+            #config['config']['password']
+            #config['config']['proxy']
 
-            self.instances[name] = client
+            self.connections[name] = client
 
-            return client;
+            return client
         else:
-            raise Exception("Provided a not supported connection type");
+            raise Exception("Provided a not supported connection type")
 
 
 class Dispatcher:
@@ -151,10 +156,11 @@ class Dispatcher:
         self.events = []
 
     def dispatch(self, eventName, data):
-        self.events.append(Event(eventName, data))
+        self.events.append(Event(eventName, json.dumps(data)))
 
     def getEvents(self):
         return self.events
+
 
 class Logger:
     def __init__(self):
@@ -193,13 +199,13 @@ class Logger:
 
 class ResponseBuilder:
     def build(self, statusCode, headers, body):
-        return Response(statusCode, headers, body)
+        return Response(statusCode, headers, json.dumps(body))
 
 
 if __name__ == '__main__':
     handler = WorkerHandler()
     processor = Worker.Processor(handler)
-    transport = TSocket.TServerSocket(host='127.0.0.1', port=9093)
+    transport = TSocket.TServerSocket(host='localhost', port=9093)
     transportFactory = TTransport.TBufferedTransportFactory()
     protocolFactory = TBinaryProtocol.TBinaryProtocolFactory()
 

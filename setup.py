@@ -19,5 +19,5 @@ setuptools.setup(
         "Operating System :: OS Independent"
     ],
     python_requires='>=3',
-    install_requires=["mysqlclient>=2.0"]
+    install_requires=["PyMySQL>=1.0"]
 )
