@@ -19,11 +19,13 @@ from thrift.server import TServer
 
 
 class WorkerHandler:
+    ACTIONS_DIR = './actions'
+
     def __init__(self):
         self.connections = None
 
     def setConnection(self, connection):
-        file = './connections.json'
+        file = self.ACTIONS_DIR + '/connections.json'
         data = self.readConnections()
 
         if not connection.name:
@@ -46,7 +48,7 @@ class WorkerHandler:
         return Message(success=True, message='Update connection successful')
 
     def setAction(self, action):
-        dir = './actions'
+        dir = self.ACTIONS_DIR
         if not os.path.isdir(dir):
             os.mkdir(dir)
 
@@ -93,7 +95,7 @@ class WorkerHandler:
         if self.connections is not None:
             return self.connections
 
-        file = './connections.json'
+        file = self.ACTIONS_DIR + '/connections.json'
         if os.path.isfile(file):
             with open(file) as json_file:
                 self.connections = json.load(json_file)
