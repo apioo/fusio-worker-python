@@ -35,3 +35,17 @@ def handle(request, context, connector, response, dispatcher, logger):
     })
 
 ```
+
+## Types
+
+This table contains an overview which connection types are implemented
+and which implementation is used:
+
+| Type | Implementation |
+| ---- | -------------- |
+| `Fusio.Adapter.Sql.Connection.Sql` | `PyMySQL`
+| `Fusio.Adapter.Sql.Connection.SqlAdvanced` | `PyMySQL`
+| `Fusio.Adapter.Http.Connection.Http` | `http.client`
+| `Fusio.Adapter.Mongodb.Connection.MongoDB` | `-`
+| `Fusio.Adapter.Elasticsearch.Connection.Elasticsearch` | `-`
+
