@@ -208,7 +208,7 @@ class ResponseBuilder:
 if __name__ == '__main__':
     handler = WorkerHandler()
     processor = Worker.Processor(handler)
-    transport = TSocket.TServerSocket(host='0.0.0.0', port=9093)
+    transport = TSocket.TServerSocket(host=None, port=9093)
     transportFactory = TTransport.TBufferedTransportFactory()
     protocolFactory = TBinaryProtocol.TBinaryProtocolFactory()
 
