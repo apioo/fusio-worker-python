@@ -208,7 +208,7 @@ class ResponseBuilder:
 if __name__ == '__main__':
     handler = WorkerHandler()
     processor = Worker.Processor(handler)
-    transport = TSocket.TServerSocket(host='localhost', port=9093)
+    transport = TSocket.TServerSocket(host='0.0.0.0', port=9093)
     transportFactory = TTransport.TBufferedTransportFactory()
     protocolFactory = TBinaryProtocol.TBinaryProtocolFactory()
 
@@ -220,5 +220,5 @@ if __name__ == '__main__':
     # server = TServer.TThreadPoolServer(
     #     processor, transport, tfactory, pfactory)
 
-    print('Started Fusio worker')
+    print('Fusio Worker started')
     server.serve()
