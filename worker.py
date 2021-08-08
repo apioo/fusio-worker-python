@@ -25,7 +25,9 @@ class WorkerHandler:
         self.connections = None
 
     def setConnection(self, connection):
-        file = self.ACTIONS_DIR + '/connections.json'
+        if not os.path.isdir(self.ACTIONS_DIR):
+            os.mkdir(self.ACTIONS_DIR)
+
         data = self.readConnections()
 
         if not connection.name:
@@ -36,7 +38,7 @@ class WorkerHandler:
             'config': connection.config,
         }
 
-        with open(file, 'w') as connection_file:
+        with open(self.ACTIONS_DIR + '/connections.json', 'w') as connection_file:
             connection_file.seek(0)
             connection_file.write(json.dumps(data))
             connection_file.truncate()
@@ -48,14 +50,13 @@ class WorkerHandler:
         return Message(success=True, message='Update connection successful')
 
     def setAction(self, action):
-        dir = self.ACTIONS_DIR
-        if not os.path.isdir(dir):
-            os.mkdir(dir)
+        if not os.path.isdir(self.ACTIONS_DIR):
+            os.mkdir(self.ACTIONS_DIR)
 
         if not action.name:
             return Message(success=False, message='Provided no action name')
 
-        file = dir + '/' + action.name + '.py'
+        file = self.ACTIONS_DIR + '/' + action.name + '.py'
 
         with open(file, 'w') as action_file:
             action_file.seek(0)
