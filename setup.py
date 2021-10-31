@@ -19,5 +19,10 @@ setuptools.setup(
         "Operating System :: OS Independent"
     ],
     python_requires='>=3',
-    install_requires=["PyMySQL>=1.0"]
+    install_requires=[
+        "PyMySQL>=1.0",
+        "psycopg2>=2.9",
+        "pymongo>=3.12",
+        "elasticsearch>=7.15",
+    ]
 )

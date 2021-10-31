@@ -4,7 +4,11 @@ import json
 import os.path
 import sys
 import traceback
+
+import psycopg2
 import pymysql.cursors
+from pymongo import MongoClient
+from elasticsearch import Elasticsearch
 
 sys.path.append("./actions")
 sys.path.append("./worker")
@@ -129,12 +133,19 @@ class Connector:
                     password=config['config']['password'],
                     database=config['config']['database']
                 )
-
-                self.connections[name] = con
-
-                return con
+            elif config['config']['type'] == "pdo_pgsql":
+                con = psycopg2.connect(
+                    host=config['config']['host'],
+                    database=config['config']['database'],
+                    user=config['config']['username'],
+                    password=config['config']['password']
+                )
             else:
                 raise Exception("SQL type is not supported")
+
+            self.connections[name] = con
+
+            return con
         elif config['type'] == "Fusio.Adapter.Sql.Connection.SqlAdvanced":
             # TODO
 
@@ -146,6 +157,20 @@ class Connector:
             #config['config']['username']
             #config['config']['password']
             #config['config']['proxy']
+
+            self.connections[name] = client
+
+            return client
+        elif config['type'] == "Fusio.Adapter.Mongodb.Connection.MongoDB":
+            client = MongoClient(config['config']['url'])
+            database = client[config['config']['database']]
+
+            self.connections[name] = database
+
+            return database
+        elif config['type'] == "Fusio.Adapter.Elasticsearch.Connection.Elasticsearch":
+            host = config['config']['host']
+            client = Elasticsearch(host.split(','))
 
             self.connections[name] = client
 
