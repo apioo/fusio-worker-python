@@ -9,6 +9,7 @@ import psycopg2
 import pymysql.cursors
 from pymongo import MongoClient
 from elasticsearch import Elasticsearch
+from urllib.parse import urlparse
 
 sys.path.append("./actions")
 sys.path.append("./worker")
@@ -151,7 +152,20 @@ class Connector:
 
             return None
         elif config['type'] == "Fusio.Adapter.Http.Connection.Http":
-            client = http.client.HTTPConnection(config['config']['url'])
+            url = urlparse(config['config']['url'])
+            scheme = "{0.scheme}".format(url)
+            host = "{0.hostname}".format(url)
+            port = url.port
+
+            if not host:
+                raise Exception("No hostname provided")
+
+            if scheme == 'http':
+                client = http.client.HTTPConnection(host, port)
+            elif scheme == 'https':
+                client = http.client.HTTPSConnection(host, port)
+            else:
+                raise Exception("Connection url provided an invalid scheme, supported is only http and https")
 
             # @TODO configure proxy for http client
             #config['config']['username']
