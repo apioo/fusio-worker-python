@@ -24,5 +24,6 @@ setuptools.setup(
         "psycopg2>=2.9",
         "pymongo>=3.12",
         "elasticsearch>=7.15",
+        "thrift>=0.16",
     ]
 )
