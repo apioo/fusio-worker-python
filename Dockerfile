@@ -1,7 +1,7 @@
-FROM python:3.8-alpine
+FROM python:3.11-alpine
 WORKDIR /worker
-RUN pip install --no-cache-dir PyMySQL psycopg2 pymongo elasticsearch thrift
 COPY . .
+RUN pip install --no-cache-dir
 EXPOSE 9093
 VOLUME /worker/actions
 CMD ["worker.py"]
