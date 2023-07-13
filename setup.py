@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="fusio-worker",
-    version="1.0.1",
+    version="1.0.2",
     author="Christoph Kappestein",
     author_email="christoph.kappestein@gmail.com",
     description="A Fusio worker implementation to execute Python code.",
