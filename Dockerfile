@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 EXPOSE 9093
 VOLUME /worker/actions
-CMD ["python", "worker.py"]
+CMD ["uvicorn", "main:app"]

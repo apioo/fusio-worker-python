@@ -20,11 +20,12 @@ setuptools.setup(
     ],
     python_requires='>=3',
     install_requires=[
-        "fastapi>=0.110",
-        "PyMySQL>=1.0",
-        "psycopg2>=2.9",
-        "pymongo>=3.12",
-        "elasticsearch>=7.15",
-        "dataclasses-json>=0.6"
+        "fastapi >= 0.110",
+        "uvicorn[standard] >= 0.29",
+        "PyMySQL >= 1.0",
+        "psycopg2 >= 2.9",
+        "pymongo >= 3.12",
+        "elasticsearch >= 7.15",
+        "dataclasses-json >= 0.6"
     ]
 )
