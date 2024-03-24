@@ -1,145 +1,125 @@
+import base64
 import http.client
 import importlib
 import json
 import os.path
+import re
 import sys
-import traceback
+from typing import Dict
+from urllib.parse import urlparse
 
 import psycopg2
 import pymysql.cursors
-from pymongo import MongoClient
 from elasticsearch import Elasticsearch
-from urllib.parse import urlparse
+from pymongo import MongoClient
 
-sys.path.append("./actions")
-sys.path.append("./worker")
+from generated.about import About
+from generated.execute import Execute
+from generated.execute_connection import ExecuteConnection
+from generated.message import Message
+from generated.response import Response
+from generated.response_event import ResponseEvent
+from generated.response_http import ResponseHTTP
+from generated.response_log import ResponseLog
+from generated.update import Update
 
-from worker import Worker
-from worker.ttypes import Message, Result, Event, Log, Response
 
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
-from thrift.server import TServer
-
-
-class WorkerHandler:
+class Worker:
     ACTIONS_DIR = './actions'
 
-    def __init__(self):
-        self.connections = None
+    def get(self):
+        return About("1.0.0", "python")
 
-    def setConnection(self, connection):
+    def execute(self, action: str, execute: Execute):
+        connector = Connector(execute.connections)
+        dispatcher = Dispatcher()
+        logger = Logger()
+        response_builder = ResponseBuilder()
+
+        file = self.get_action_file(action)
+
+        module = importlib.import_module(file)
+
+        response = module.handle(execute.request, execute.context, connector, response_builder, dispatcher, logger)
+        if not response:
+            response = ResponseHTTP()
+            response.status_code = 204
+
+        return Response(response, dispatcher.get_events(), logger.get_logs())
+
+    def put(self, action: str, update: Update):
         if not os.path.isdir(self.ACTIONS_DIR):
             os.mkdir(self.ACTIONS_DIR)
 
-        data = self.readConnections()
-
-        if not connection.name:
-            return Message(success=False, message='Provided no connection name')
-
-        data[connection.name] = {
-            'type': connection.type,
-            'config': connection.config,
-        }
-
-        with open(self.ACTIONS_DIR + '/connections.json', 'w') as connection_file:
-            connection_file.seek(0)
-            connection_file.write(json.dumps(data))
-            connection_file.truncate()
-
-        self.connections = None
-
-        print('Update connection ' + connection.name)
-
-        return Message(success=True, message='Update connection successful')
-
-    def setAction(self, action):
-        if not os.path.isdir(self.ACTIONS_DIR):
-            os.mkdir(self.ACTIONS_DIR)
-
-        if not action.name:
-            return Message(success=False, message='Provided no action name')
-
-        file = self.ACTIONS_DIR + '/' + action.name + '.py'
+        file = self.get_action_file(action)
+        code = update.code
 
         with open(file, 'w') as action_file:
             action_file.seek(0)
-            action_file.write(action.code)
+            action_file.write(code)
             action_file.truncate()
 
+        self.clear_cache()
+
+        return self.new_message(True, "Action successfully updated")
+
+    def delete(self, action: str):
+        if not os.path.isdir(self.ACTIONS_DIR):
+            os.mkdir(self.ACTIONS_DIR)
+
+        file = self.get_action_file(action)
+
+        os.remove(file)
+
+        self.clear_cache()
+
+        return self.new_message(True, "Action successfully deleted")
+
+    def get_action_file(self, action: str):
+        if not re.match("/^[A-Za-z0-9_-]{3,30}$/", action):
+            raise Exception("Provided no valid action name")
+
+        return self.ACTIONS_DIR + '/' + action + '.py'
+
+    def new_message(self, success: bool, message: str):
+        ret = Message()
+        ret.success = success
+        ret.message = message
+        return ret
+
+    def clear_cache(self):
         sys.modules.clear()
-
-        print('Update action ' + action.name)
-
-        return Message(success=True, message='Update action successful')
-
-    def executeAction(self, execute):
-        connector = Connector(self.readConnections())
-        dispatcher = Dispatcher()
-        logger = Logger()
-        responseBuilder = ResponseBuilder()
-
-        if not execute.action:
-            return
-
-        print('Execute action ' + execute.action)
-
-        try:
-            module = importlib.import_module(execute.action)
-
-            response = module.handle(execute.request, execute.context, connector, responseBuilder, dispatcher, logger)
-
-            return Result(response, dispatcher.getEvents(), logger.getLogs())
-        except Exception as e:
-            return Result(Response(500, None, json.dumps({
-                'success': False,
-                'message': 'An error occurred at the worker: ' + str(e),
-            })))
-
-    def readConnections(self):
-        if self.connections is not None:
-            return self.connections
-
-        file = self.ACTIONS_DIR + '/connections.json'
-        if os.path.isfile(file):
-            with open(file) as json_file:
-                self.connections = json.load(json_file)
-
-        if self.connections is not None:
-            return self.connections
-
-        return {}
 
 
 class Connector:
-    def __init__(self, configs):
+    def __init__(self, configs: Dict[str, ExecuteConnection]):
         self.configs = configs
         self.connections = {}
 
-    def getConnection(self, name):
+    def get_connection(self, name):
         if name in self.connections.keys():
             return self.connections[name]
 
         if name not in self.configs.keys():
             raise Exception("Provided connection is not configured")
 
-        config = self.configs[name]
+        connection = self.configs[name]
+        config = json.loads(base64.b64decode(connection.config))
 
-        if config['type'] == "Fusio.Adapter.Sql.Connection.Sql":
-            if config['config']['type'] == "pdo_mysql":
+        if connection.type == "Fusio.Adapter.Sql.Connection.Sql":
+            if config['type'] == "pdo_mysql":
                 con = pymysql.connect(
-                    host=config['config']['host'],
-                    user=config['config']['username'],
-                    password=config['config']['password'],
-                    database=config['config']['database']
+                    host=config['host'],
+                    user=config['username'],
+                    password=config['password'],
+                    database=config['database']
                 )
-            elif config['config']['type'] == "pdo_pgsql":
+            elif config['type'] == "pdo_pgsql":
                 con = psycopg2.connect(
-                    host=config['config']['host'],
-                    database=config['config']['database'],
-                    user=config['config']['username'],
-                    password=config['config']['password']
+                    host=config['host'],
+                    database=config['database'],
+                    user=config['username'],
+                    password=config['password']
                 )
             else:
                 raise Exception("SQL type is not supported")
@@ -147,12 +127,12 @@ class Connector:
             self.connections[name] = con
 
             return con
-        elif config['type'] == "Fusio.Adapter.Sql.Connection.SqlAdvanced":
+        elif connection.type == "Fusio.Adapter.Sql.Connection.SqlAdvanced":
             # TODO
 
             return None
-        elif config['type'] == "Fusio.Adapter.Http.Connection.Http":
-            url = urlparse(config['config']['url'])
+        elif connection.type == "Fusio.Adapter.Http.Connection.Http":
+            url = urlparse(config['url'])
             scheme = "{0.scheme}".format(url)
             host = "{0.hostname}".format(url)
             port = url.port
@@ -168,22 +148,22 @@ class Connector:
                 raise Exception("Connection url provided an invalid scheme, supported is only http and https")
 
             # @TODO configure proxy for http client
-            #config['config']['username']
-            #config['config']['password']
-            #config['config']['proxy']
+            # config['username']
+            # config['password']
+            # config['proxy']
 
             self.connections[name] = client
 
             return client
-        elif config['type'] == "Fusio.Adapter.Mongodb.Connection.MongoDB":
-            client = MongoClient(config['config']['url'])
-            database = client[config['config']['database']]
+        elif connection.type == "Fusio.Adapter.Mongodb.Connection.MongoDB":
+            client = MongoClient(config['url'])
+            database = client[config['database']]
 
             self.connections[name] = database
 
             return database
-        elif config['type'] == "Fusio.Adapter.Elasticsearch.Connection.Elasticsearch":
-            host = config['config']['host']
+        elif connection.type == "Fusio.Adapter.Elasticsearch.Connection.Elasticsearch":
+            host = config['host']
             client = Elasticsearch(host.split(','))
 
             self.connections[name] = client
@@ -197,10 +177,10 @@ class Dispatcher:
     def __init__(self):
         self.events = []
 
-    def dispatch(self, eventName, data):
-        self.events.append(Event(eventName, json.dumps(data)))
+    def dispatch(self, event_name, data):
+        self.events.append(ResponseEvent(event_name, data))
 
-    def getEvents(self):
+    def get_events(self):
         return self.events
 
 
@@ -233,31 +213,16 @@ class Logger:
         self.log("DEBUG", message)
 
     def log(self, level, message):
-        self.logs.append(Log(level, message))
+        self.logs.append(ResponseLog(level, message))
 
-    def getLogs(self):
+    def get_logs(self):
         return self.logs
 
 
 class ResponseBuilder:
-    def build(self, statusCode, headers, body):
-        return Response(statusCode, headers, json.dumps(body))
-
-
-if __name__ == '__main__':
-    handler = WorkerHandler()
-    processor = Worker.Processor(handler)
-    transport = TSocket.TServerSocket(host=None, port=9093)
-    transportFactory = TTransport.TBufferedTransportFactory()
-    protocolFactory = TBinaryProtocol.TBinaryProtocolFactory()
-
-    server = TServer.TSimpleServer(processor, transport, transportFactory, protocolFactory)
-
-    # You could do one of these for a multithreaded server
-    # server = TServer.TThreadedServer(
-    #     processor, transport, tfactory, pfactory)
-    # server = TServer.TThreadPoolServer(
-    #     processor, transport, tfactory, pfactory)
-
-    print('Fusio Worker started')
-    server.serve()
+    def build(self, status_code, headers, body):
+        response = ResponseHTTP()
+        response.status_code = status_code
+        response.headers = headers
+        response.body = body
+        return response
