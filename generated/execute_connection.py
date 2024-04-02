@@ -1,7 +1,7 @@
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json
+from dataclasses import dataclass, field
+from dataclasses_json import dataclass_json, config
 @dataclass_json
 @dataclass
 class ExecuteConnection:
-    type: str
-    config: str
+    type: str = field(default=None, metadata=config(field_name="type"))
+    config: str = field(default=None, metadata=config(field_name="config"))

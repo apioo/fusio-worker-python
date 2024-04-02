@@ -36,9 +36,7 @@ class Worker:
         logger = Logger()
         response_builder = ResponseBuilder()
 
-        file = self.get_action_file(action)
-
-        module = importlib.import_module(file)
+        module = importlib.import_module(action, package=__name__)
 
         response = module.handle(execute.request, execute.context, connector, response_builder, dispatcher, logger)
         if not response:
@@ -76,19 +74,17 @@ class Worker:
         return self.new_message(True, "Action successfully deleted")
 
     def get_action_file(self, action: str):
-        if not re.match("/^[A-Za-z0-9_-]{3,30}$/", action):
-            raise Exception("Provided no valid action name")
+        if not re.match("^[A-Za-z0-9_-]{3,30}$", action):
+            raise Exception("Provided no valid action name: " + action)
 
         return self.ACTIONS_DIR + '/' + action + '.py'
 
     def new_message(self, success: bool, message: str):
-        ret = Message()
-        ret.success = success
-        ret.message = message
-        return ret
+        return Message(success, message, None)
 
     def clear_cache(self):
         sys.modules.clear()
+        importlib.invalidate_caches()
 
 
 class Connector:

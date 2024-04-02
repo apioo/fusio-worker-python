@@ -1,4 +1,5 @@
 import sys
+import traceback
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -16,25 +17,25 @@ worker = Worker()
 async def exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
-        content={"success": False, "message": str(exc)},
+        content={"success": False, "message": str(exc), "trace": "\n".join(traceback.format_exception(None, exc, exc.__traceback__))},
     )
 
 
 @app.get("/")
-def get():
+async def get():
     return worker.get()
 
 
 @app.post("/{action}")
-def execute(action: str, payload: Execute):
+async def execute(action: str, payload: Execute):
     return worker.execute(action, payload)
 
 
 @app.put("/{action}")
-def put(action: str, payload: Update):
+async def put(action: str, payload: Update):
     return worker.put(action, payload)
 
 
 @app.delete("/{action}")
-def put(action: str):
+async def put(action: str):
     return worker.delete(action)
