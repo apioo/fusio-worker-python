@@ -40,7 +40,9 @@ class Worker:
 
         module = importlib.import_module(action, package=__name__)
 
-        response = module.handle(execute.request, execute.context, connector, response_builder, dispatcher, logger)
+        module.handle(execute.request, execute.context, connector, response_builder, dispatcher, logger)
+
+        response = response_builder.get_response()
         if not response:
             response = ResponseHTTP()
             response.status_code = 204
@@ -221,9 +223,14 @@ class Logger:
 
 
 class ResponseBuilder:
+    def __init__(self):
+        self.response = None
+
     def build(self, status_code, headers, body):
-        response = ResponseHTTP()
-        response.status_code = status_code
-        response.headers = headers
-        response.body = body
-        return response
+        self.response = ResponseHTTP()
+        self.response.status_code = status_code
+        self.response.headers = headers
+        self.response.body = body
+
+    def get_response(self):
+        return self.response
