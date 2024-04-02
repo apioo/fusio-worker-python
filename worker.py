@@ -36,6 +36,8 @@ class Worker:
         logger = Logger()
         response_builder = ResponseBuilder()
 
+        self.assert_action(action)
+
         module = importlib.import_module(action, package=__name__)
 
         response = module.handle(execute.request, execute.context, connector, response_builder, dispatcher, logger)
@@ -61,7 +63,7 @@ class Worker:
 
         return self.new_message(True, "Action successfully updated")
 
-    def delete(self, action: str):
+    def delete(self, action: str) -> Message:
         if not os.path.isdir(self.ACTIONS_DIR):
             os.mkdir(self.ACTIONS_DIR)
 
@@ -73,13 +75,16 @@ class Worker:
 
         return self.new_message(True, "Action successfully deleted")
 
-    def get_action_file(self, action: str):
-        if not re.match("^[A-Za-z0-9_-]{3,30}$", action):
-            raise Exception("Provided no valid action name: " + action)
+    def get_action_file(self, action: str) -> str:
+        self.assert_action(action)
 
         return self.ACTIONS_DIR + '/' + action + '.py'
 
-    def new_message(self, success: bool, message: str):
+    def assert_action(self, action: str):
+        if not re.match("^[A-Za-z0-9_-]{3,30}$", action):
+            raise Exception("Provided no valid action name: " + action)
+
+    def new_message(self, success: bool, message: str) -> Message:
         return Message(success, message, None)
 
     def clear_cache(self):
