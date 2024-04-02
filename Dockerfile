@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 EXPOSE 9093
 VOLUME /worker/actions
-CMD ["uvicorn", "main:app"]
+CMD ["uvicorn", "main:app", "--port", "9093"]
