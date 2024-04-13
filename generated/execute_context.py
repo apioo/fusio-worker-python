@@ -1,13 +1,13 @@
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
-from execute_context_app import ExecuteContextApp
-from execute_context_user import ExecuteContextUser
-@dataclass_json
-@dataclass
-class ExecuteContext:
-    operation_id: int = field(default=None, metadata=config(field_name="operationId"))
-    base_url: str = field(default=None, metadata=config(field_name="baseUrl"))
-    tenant_id: str = field(default=None, metadata=config(field_name="tenantId"))
-    action: str = field(default=None, metadata=config(field_name="action"))
-    app: ExecuteContextApp = field(default=None, metadata=config(field_name="app"))
-    user: ExecuteContextUser = field(default=None, metadata=config(field_name="user"))
+from pydantic import BaseModel, Field, GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from .execute_context_app import ExecuteContextApp
+from .execute_context_user import ExecuteContextUser
+class ExecuteContext(BaseModel):
+    operation_id: Optional[int] = Field(default=None, alias="operationId")
+    base_url: Optional[str] = Field(default=None, alias="baseUrl")
+    tenant_id: Optional[str] = Field(default=None, alias="tenantId")
+    action: Optional[str] = Field(default=None, alias="action")
+    app: Optional[ExecuteContextApp] = Field(default=None, alias="app")
+    user: Optional[ExecuteContextUser] = Field(default=None, alias="user")
+    pass

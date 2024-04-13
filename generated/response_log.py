@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
-@dataclass_json
-@dataclass
-class ResponseLog:
-    level: str = field(default=None, metadata=config(field_name="level"))
-    message: str = field(default=None, metadata=config(field_name="message"))
+from pydantic import BaseModel, Field, GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+class ResponseLog(BaseModel):
+    level: Optional[str] = Field(default=None, alias="level")
+    message: Optional[str] = Field(default=None, alias="message")
+    pass

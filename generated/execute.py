@@ -1,12 +1,11 @@
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
-from typing import Dict
-from execute_connection import ExecuteConnection
-from execute_request import ExecuteRequest
-from execute_context import ExecuteContext
-@dataclass_json
-@dataclass
-class Execute:
-    connections: Dict[str, ExecuteConnection] = field(default=None, metadata=config(field_name="connections"))
-    request: ExecuteRequest = field(default=None, metadata=config(field_name="request"))
-    context: ExecuteContext = field(default=None, metadata=config(field_name="context"))
+from pydantic import BaseModel, Field, GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from .execute_connection import ExecuteConnection
+from .execute_request import ExecuteRequest
+from .execute_context import ExecuteContext
+class Execute(BaseModel):
+    connections: Optional[Dict[str, ExecuteConnection]] = Field(default=None, alias="connections")
+    request: Optional[ExecuteRequest] = Field(default=None, alias="request")
+    context: Optional[ExecuteContext] = Field(default=None, alias="context")
+    pass

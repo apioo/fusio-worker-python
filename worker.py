@@ -28,7 +28,10 @@ class Worker:
     ACTIONS_DIR = './actions'
 
     def get(self):
-        return About("1.0.0", "python")
+        about = About()
+        about.api_version = "1.0.0"
+        about.language = "python"
+        return about
 
     def execute(self, action: str, execute: Execute):
         connector = Connector(execute.connections)
@@ -47,7 +50,11 @@ class Worker:
             response = ResponseHTTP()
             response.status_code = 204
 
-        return Response(response, dispatcher.get_events(), logger.get_logs())
+        result = Response()
+        result.response = response
+        result.events = dispatcher.get_events()
+        result.logs = logger.get_logs()
+        return result
 
     def put(self, action: str, update: Update):
         if not os.path.isdir(self.ACTIONS_DIR):
@@ -87,7 +94,10 @@ class Worker:
             raise Exception("Provided no valid action name: " + action)
 
     def new_message(self, success: bool, message: str) -> Message:
-        return Message(success, message, None)
+        result = Message()
+        result.success = success
+        result.message = message
+        return result
 
     def clear_cache(self):
         sys.modules.clear()
@@ -181,7 +191,10 @@ class Dispatcher:
         self.events = []
 
     def dispatch(self, event_name, data):
-        self.events.append(ResponseEvent(event_name, data))
+        event = ResponseEvent()
+        event.event_name = event_name
+        event.data = data
+        self.events.append(event)
 
     def get_events(self):
         return self.events
@@ -216,7 +229,10 @@ class Logger:
         self.log("DEBUG", message)
 
     def log(self, level, message):
-        self.logs.append(ResponseLog(level, message))
+        log = ResponseLog()
+        log.level = level
+        log.message = message
+        self.logs.append(log)
 
     def get_logs(self):
         return self.logs

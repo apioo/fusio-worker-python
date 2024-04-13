@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
-@dataclass_json
-@dataclass
-class About:
-    api_version: str = field(default=None, metadata=config(field_name="apiVersion"))
-    language: str = field(default=None, metadata=config(field_name="language"))
+from pydantic import BaseModel, Field, GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+class About(BaseModel):
+    api_version: Optional[str] = Field(default=None, alias="apiVersion")
+    language: Optional[str] = Field(default=None, alias="language")
+    pass

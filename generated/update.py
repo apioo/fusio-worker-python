@@ -1,6 +1,6 @@
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
-@dataclass_json
-@dataclass
-class Update:
-    code: str = field(default=None, metadata=config(field_name="code"))
+from pydantic import BaseModel, Field, GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+class Update(BaseModel):
+    code: Optional[str] = Field(default=None, alias="code")
+    pass

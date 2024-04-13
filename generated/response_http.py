@@ -1,10 +1,8 @@
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
-from typing import Any
-from typing import Dict
-@dataclass_json
-@dataclass
-class ResponseHTTP:
-    status_code: int = field(default=None, metadata=config(field_name="statusCode"))
-    headers: Dict[str, str] = field(default=None, metadata=config(field_name="headers"))
-    body: Any = field(default=None, metadata=config(field_name="body"))
+from pydantic import BaseModel, Field, GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+class ResponseHTTP(BaseModel):
+    status_code: Optional[int] = Field(default=None, alias="statusCode")
+    headers: Optional[Dict[str, str]] = Field(default=None, alias="headers")
+    body: Optional[Any] = Field(default=None, alias="body")
+    pass
