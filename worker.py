@@ -101,7 +101,6 @@ class Worker:
 
     def clear_cache(self):
         sys.modules.clear()
-        importlib.invalidate_caches()
 
 
 class Connector:
