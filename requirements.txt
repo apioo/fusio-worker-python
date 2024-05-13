@@ -1,8 +1,3 @@
 fastapi >= 0.110
-pydantic >= 2.7.0
 uvicorn[standard] >= 0.29
-PyMySQL >= 1.0
-psycopg2 >= 2.9
-pymongo >= 3.12
-elasticsearch >= 7.15
-dataclasses-json >= 0.6.4
+fusio-worker-runtime >= 0.1.2

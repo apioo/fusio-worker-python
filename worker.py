@@ -9,23 +9,26 @@ from typing import Dict
 from urllib.parse import urlparse
 
 import psycopg2
-import pymysql.cursors
+import pymysql
 from elasticsearch import Elasticsearch
 from pymongo import MongoClient
-
-from generated.about import About
-from generated.execute import Execute
-from generated.execute_connection import ExecuteConnection
-from generated.message import Message
-from generated.response import Response
-from generated.response_event import ResponseEvent
-from generated.response_http import ResponseHTTP
-from generated.response_log import ResponseLog
-from generated.update import Update
+from runtime.generated.about import About
+from runtime.generated.execute import Execute
+from runtime.generated.execute_connection import ExecuteConnection
+from runtime.generated.message import Message
+from runtime.generated.response import Response
+from runtime.generated.response_event import ResponseEvent
+from runtime.generated.response_http import ResponseHTTP
+from runtime.generated.response_log import ResponseLog
+from runtime.generated.update import Update
+from runtime.runtime import Runtime
 
 
 class Worker:
     ACTIONS_DIR = './actions'
+
+    def __init__(self):
+        self.runtime = Runtime()
 
     def get(self):
         about = About()

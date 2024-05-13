@@ -1,8 +1,0 @@
-{
-  "type": "model-python",
-  "require": {
-    "fusio/worker": {
-      "target": "./generated"
-    }
-  }
-}
