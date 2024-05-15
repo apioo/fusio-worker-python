@@ -5,7 +5,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 sys.path.append("./actions")
-sys.path.append("./generated")
 
 from worker import Worker, Execute, Update
 
