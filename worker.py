@@ -56,7 +56,7 @@ class Worker:
         return self.ACTIONS_DIR + '/' + action + '.py'
 
     def assert_action(self, action: str):
-        if not re.match("^[A-Za-z0-9_-]{3,30}$", action):
+        if not re.match("^[A-Za-z0-9_-]{3,255}$", action):
             raise Exception("Provided no valid action name: " + action)
 
     def new_message(self, success: bool, message: str) -> Message:
