@@ -1,6 +1,6 @@
 FROM python:3.11-alpine
 RUN apk update
-RUN apk add postgresql-dev gcc python3-dev musl-dev
+RUN apk add postgresql-dev gcc python3-dev musl-dev libffi-dev openssl-dev
 WORKDIR /worker
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
