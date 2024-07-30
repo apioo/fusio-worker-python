@@ -1,4 +1,4 @@
-FROM python:3.11-alpine
+FROM python:3.10-alpine
 RUN apk update
 RUN apk add postgresql-dev gcc python3-dev musl-dev openssl-dev
 WORKDIR /worker
