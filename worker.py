@@ -1,6 +1,5 @@
 import os.path
 import re
-import sys
 
 from runtime.generated.execute import Execute
 from runtime.generated.message import Message
@@ -66,4 +65,4 @@ class Worker:
         return result
 
     def clear_cache(self):
-        sys.modules.clear()
+        pass
