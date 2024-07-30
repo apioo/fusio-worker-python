@@ -21,6 +21,6 @@ setuptools.setup(
     install_requires=[
         "fastapi >= 0.110",
         "uvicorn[standard] >= 0.29",
-        "fusio-worker-runtime >= 0.1.7",
+        "fusio-worker-runtime >= 0.1.8",
     ]
 )

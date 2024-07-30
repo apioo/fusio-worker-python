@@ -33,7 +33,7 @@ class Worker:
             action_file.write(code)
             action_file.truncate()
 
-        self.clear_cache()
+        self.runtime.clear(action)
 
         return self.new_message(True, "Action successfully updated")
 
@@ -44,8 +44,6 @@ class Worker:
         file = self.get_action_file(action)
 
         os.remove(file)
-
-        self.clear_cache()
 
         return self.new_message(True, "Action successfully deleted")
 
@@ -63,6 +61,3 @@ class Worker:
         result.success = success
         result.message = message
         return result
-
-    def clear_cache(self):
-        pass
