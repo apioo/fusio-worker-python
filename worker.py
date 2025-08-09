@@ -33,7 +33,7 @@ class Worker:
             action_file.write(code)
             action_file.truncate()
 
-        self.runtime.clear(action)
+        self.runtime.reload(action)
 
         return self.new_message(True, "Action successfully updated")
 
