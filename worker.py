@@ -53,6 +53,8 @@ class Worker:
         action_hash = parts[1] if len(parts) > 1 else None
 
         self.assert_action(name)
+        if action_hash:
+            self.assert_hash(action_hash)
 
         base_dir = os.path.join(self.ACTIONS_DIR, name)
 
@@ -67,6 +69,10 @@ class Worker:
     def assert_action(self, action: str):
         if not re.match("^[A-Za-z0-9_-]{3,255}$", action):
             raise Exception("Provided no valid action name: " + action)
+
+    def assert_hash(self, action_hash: str):
+        if not re.match("^[A-Za-z0-9]{3,255}$", action_hash):
+            raise Exception("Provided no valid action hash: " + action_hash)
 
     def new_message(self, success: bool, message: str) -> Message:
         result = Message()
