@@ -19,7 +19,7 @@ class Worker:
     def execute(self, action: str, execute: Execute):
         self.assert_action(action)
 
-        return self.runtime.run(action, execute)
+        return self.runtime.run(self.get_action_file(action), execute)
 
     def put(self, action: str, update: Update):
         if not os.path.isdir(self.ACTIONS_DIR):
