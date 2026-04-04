@@ -17,8 +17,6 @@ class Worker:
         return self.runtime.get()
 
     def execute(self, action: str, execute: Execute):
-        self.assert_action(action)
-
         return self.runtime.run(self.get_action_file(action), execute)
 
     def put(self, action: str, update: Update):
