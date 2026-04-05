@@ -27,9 +27,9 @@ class Worker:
         code = update.code
 
         with open(file, 'w') as action_file:
-            action_file.seek(0)
             action_file.write(code)
-            action_file.truncate()
+            action_file.flush()
+            os.fsync(action_file.fileno())
 
         self.runtime.reload(file)
 
